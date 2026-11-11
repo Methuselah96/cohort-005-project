@@ -54,4 +54,6 @@ export default [
   route("api/logout", "routes/api.logout.ts"),
   route("api/video-tracking", "routes/api.video-tracking.ts"),
   route("api/set-dev-country", "routes/api.set-dev-country.ts"),
+  // PROTOTYPE, throw away (wayfinder #29)
+  route("api/prototype-notification-feed", "routes/api.prototype-notification-feed.ts"),
 ] satisfies RouteConfig;

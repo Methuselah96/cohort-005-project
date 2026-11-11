@@ -1,4 +1,16 @@
-import { Outlet } from "react-router";
+import { Outlet, useFetcher, useSearchParams } from "react-router";
+// PROTOTYPE (wayfinder #29): Notification Feed variants
+import { getFeed } from "~/prototype/notification-feed-knock.server";
+import {
+  FEED_VARIANTS,
+  VariantAHeaderSlot,
+  VariantBNavSlot,
+  VariantCNavSlot,
+  VariantCInbox,
+  useFeedPolling,
+  type FeedData,
+} from "~/prototype/notification-feed-variants";
+import { PrototypeSwitcher, usePrototypeVariant } from "~/components/prototype-switcher";
 import type { Route } from "./+types/layout.app";
 import { Sidebar } from "~/components/sidebar";
 import { DevUI } from "~/components/dev-ui";
@@ -18,6 +30,31 @@ import {
   TeamMemberRole,
   LessonProgressStatus,
 } from "~/db/schema";
+
+// PROTOTYPE (wayfinder #29)
+async function loadNotificationFeed(userId: number): Promise<FeedData> {
+  try {
+    const feed = await getFeed(userId);
+    return {
+      unseenCount: feed.meta.unseen_count,
+      unreadCount: feed.meta.unread_count,
+      items: feed.entries.map((e: any) => ({
+        id: e.id,
+        insertedAt: e.inserted_at,
+        seen: !!e.seen_at,
+        read: !!e.read_at,
+        actorName: e.actors?.[0]?.name ?? null,
+        kind: e.data.kind,
+        title: e.data.title,
+        html: e.blocks?.find((b: any) => b.name === "body")?.rendered ?? e.data.body,
+        url: e.data.url,
+        needsAction: !!e.data.needs_action,
+      })),
+    };
+  } catch (err) {
+    return { items: [], unseenCount: 0, unreadCount: 0, error: String(err) };
+  }
+}
 
 function getAllUsers() {
   return db.select().from(users).all();
@@ -213,6 +250,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     countryTierInfo,
     countries: COUNTRIES,
     isTeamAdmin: currentUserId ? isTeamAdmin(currentUserId) : false,
+    notificationFeed: currentUserId ? await loadNotificationFeed(currentUserId) : null,
   };
 }
 
@@ -225,7 +263,13 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
     countryTierInfo,
     countries,
     isTeamAdmin: userIsTeamAdmin,
+    notificationFeed,
   } = loaderData;
+  const variant = usePrototypeVariant(FEED_VARIANTS.map((v) => v.key));
+  const [params] = useSearchParams();
+  const showInbox = variant === "C" && params.get("inbox") === "1";
+  const feedFetcher = useFetcher();
+  useFeedPolling();
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -233,10 +277,27 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
         currentUser={currentUser}
         recentCourses={recentCourses}
         isTeamAdmin={userIsTeamAdmin}
+        headerSlot={variant === "A" && <VariantAHeaderSlot feed={notificationFeed} />}
+        navSlot={
+          variant === "B" ? <VariantBNavSlot feed={notificationFeed} />
+          : variant === "C" ? <VariantCNavSlot feed={notificationFeed} />
+          : null
+        }
       />
       <main className="flex-1 overflow-y-auto">
-        <Outlet />
+        {showInbox ? <VariantCInbox feed={notificationFeed} /> : <Outlet />}
       </main>
+      <PrototypeSwitcher variants={FEED_VARIANTS} current={variant}>
+        {currentUser && (
+          <feedFetcher.Form method="post" action="/api/prototype-notification-feed" className="ml-2 flex gap-1 border-l border-white/20 pl-2 text-xs">
+            <input type="hidden" name="name" value={currentUser.name} />
+            <button name="status" value="send" className="rounded-full px-2 py-1 hover:bg-white/15">
+              {feedFetcher.state !== "idle" ? "…" : "Send me one"}
+            </button>
+            <button name="status" value="reset" className="rounded-full px-2 py-1 hover:bg-white/15">Reset feed</button>
+          </feedFetcher.Form>
+        )}
+      </PrototypeSwitcher>
       <DevUI
         users={users}
         currentUser={currentUser}
