@@ -1817,6 +1817,48 @@ This course is still in draft while the cluster examples are rewritten against t
 
   console.log(`Created ${countRows(schema.enrollments)} enrollments.`);
 
+  // ─── Bookmarks and Notes ───
+  // Private to each Student, and only on Lessons of Courses they are enrolled in.
+
+  db.insert(schema.bookmarks)
+    .values([
+      {
+        userId: students[0].id,
+        lessonId: course1LessonIds[2],
+        createdAt: daysAgo(30),
+      },
+      {
+        userId: students[0].id,
+        lessonId: course2LessonIds[1],
+        createdAt: daysAgo(12),
+      },
+      {
+        userId: students[2].id,
+        lessonId: course1LessonIds[0],
+        createdAt: daysAgo(20),
+      },
+    ])
+    .run();
+
+  db.insert(schema.notes)
+    .values([
+      {
+        userId: students[0].id,
+        lessonId: course1LessonIds[2],
+        body: "Use `npx tsc`, not a global install.\n# not a heading, just a reminder",
+        createdAt: daysAgo(30),
+        updatedAt: daysAgo(28),
+      },
+      {
+        userId: students[2].id,
+        lessonId: course1LessonIds[0],
+        body: "Rewatch the setup section before the next module.",
+        createdAt: daysAgo(20),
+        updatedAt: daysAgo(20),
+      },
+    ])
+    .run();
+
   // ─── Course Ratings ───
   // Star ratings from enrolled students only. Not everyone rates.
   // Course 1 averages 4.3 (4 ratings), course 2 averages 4.5 (2 ratings).
@@ -2849,6 +2891,9 @@ This course is still in draft while the cluster examples are rewritten against t
   console.log(`  Enrollments: ${countRows(schema.enrollments)}`);
   console.log(`  Course ratings: ${countRows(schema.courseRatings)}`);
   console.log(`  Lesson comments: ${countRows(schema.comments)}`);
+  console.log(
+    `  Bookmarks: ${countRows(schema.bookmarks)}, notes: ${countRows(schema.notes)}`
+  );
   console.log(
     `  Lesson progress: ${countRows(schema.lessonProgress)} (${countRows(schema.lessonProgress, eq(schema.lessonProgress.status, LessonProgressStatus.Completed))} completed)`
   );
