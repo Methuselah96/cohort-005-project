@@ -30,8 +30,11 @@ export function noteState({
   isSaving: boolean;
   error?: string;
 }): NoteState {
-  const remaining = MAX_NOTE_LENGTH - draft.length;
-  const status = statusOf({ saved, draft, isSaving, error, remaining });
+  // The server trims the body before it checks the length and stores it, so
+  // compare and count what will be stored, not what is in the textarea.
+  const body = draft.trim();
+  const remaining = MAX_NOTE_LENGTH - body.length;
+  const status = statusOf({ saved, body, isSaving, error, remaining });
 
   return {
     status,
@@ -42,22 +45,22 @@ export function noteState({
 
 function statusOf({
   saved,
-  draft,
+  body,
   isSaving,
   error,
   remaining,
 }: {
   saved: SavedNote | null;
-  draft: string;
+  body: string;
   isSaving: boolean;
   error?: string;
   remaining: number;
 }): NoteStatus {
   if (isSaving) return { kind: "saving" };
   if (remaining < 0) return { kind: "too-long", overBy: -remaining };
-  if (draft.trim() === "") return { kind: "blank" };
+  if (body === "") return { kind: "blank" };
 
-  if (!saved || draft !== saved.body) {
+  if (!saved || body !== saved.body) {
     return error ? { kind: "error", message: error } : { kind: "unsaved" };
   }
   return { kind: "saved", updatedAt: saved.updatedAt };

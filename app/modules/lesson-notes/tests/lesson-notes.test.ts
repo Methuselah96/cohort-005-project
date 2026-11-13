@@ -58,6 +58,26 @@ describe("describeLessonNote", () => {
     expect(state.canSave).toBe(true);
   });
 
+  it("is saved when the draft differs from the saved note only by surrounding whitespace", () => {
+    const state = describeLessonNote({
+      saved,
+      draft: `  ${saved.body}\n`,
+      isSaving: false,
+    });
+    expect(state.status).toEqual({ kind: "saved", updatedAt: saved.updatedAt });
+    expect(state.canSave).toBe(false);
+  });
+
+  it("does not count surrounding whitespace against the limit", () => {
+    const state = describeLessonNote({
+      saved: null,
+      draft: `${"a".repeat(MAX_NOTE_LENGTH)}\n\n`,
+      isSaving: false,
+    });
+    expect(state.status).toEqual({ kind: "unsaved" });
+    expect(state.remaining).toBe(0);
+  });
+
   it("cannot save again while a save is in flight", () => {
     const state = describeLessonNote({ saved, draft: "new", isSaving: true });
     expect(state.status).toEqual({ kind: "saving" });
