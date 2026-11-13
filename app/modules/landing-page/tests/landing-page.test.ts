@@ -31,14 +31,14 @@ describe("landingStats", () => {
 
 describe("secondaryHeroAction", () => {
   it("asks a visitor who is not signed in to create an account", () => {
-    expect(secondaryHeroAction(null)).toEqual({
+    expect(secondaryHeroAction(false)).toEqual({
       to: "/signup",
       label: "Create a free account",
     });
   });
 
   it("sends a signed-in Person to their dashboard", () => {
-    expect(secondaryHeroAction({ id: 7 })).toEqual({
+    expect(secondaryHeroAction(true)).toEqual({
       to: "/dashboard",
       label: "Go to your dashboard",
     });

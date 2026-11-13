@@ -168,6 +168,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     countryTierInfo,
     countries,
   } = loaderData;
+  const signedIn = currentUser !== null;
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -234,7 +235,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           courseCount: totalCourses,
           categoryCount: totalCategories,
         })}
-        secondaryAction={secondaryHeroAction(currentUser)}
+        secondaryAction={secondaryHeroAction(signedIn)}
         spotlight={featuredCourses[0] ?? null}
       />
 
@@ -296,7 +297,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </section>
       )}
 
-      <LandingFooter signedIn={currentUser !== null} />
+      <LandingFooter signedIn={signedIn} />
 
       <DevUI
         users={users}
