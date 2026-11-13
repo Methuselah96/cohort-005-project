@@ -3,22 +3,9 @@ import { createTestDb, seedBaseData, type TestDb } from "~/test/setup";
 import * as schema from "~/db/schema";
 import { QuestionType } from "~/db/schema";
 import { markdown } from "~/lib/text";
+import { useTestDb } from "./test-db";
 
-// lesson-viewer reads the app's shared connection; point it at a fresh
-// in-memory database for each test.
-const testDb = vi.hoisted(() => ({ current: undefined as unknown }));
-vi.mock("~/db", () => ({
-  db: new Proxy(
-    {},
-    {
-      get(_target, prop) {
-        const target = testDb.current as object;
-        const value = Reflect.get(target, prop);
-        return typeof value === "function" ? value.bind(target) : value;
-      },
-    }
-  ),
-}));
+vi.mock("~/db", () => import("./test-db"));
 
 const { computeResult, getQuizWithQuestions } = await import("../index.server");
 
@@ -52,7 +39,7 @@ function addQuestion(position: number, questionType: QuestionType) {
 
 beforeEach(() => {
   db = createTestDb();
-  testDb.current = db;
+  useTestDb(db);
   const base = seedBaseData(db);
   studentId = base.user.id;
   const module = db

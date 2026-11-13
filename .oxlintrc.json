@@ -165,7 +165,6 @@
         "app/lib/refunds.server.ts",
         "app/lib/seat-claims.server.ts",
         "app/modules/instructor-analytics/lib/instructor-analytics.ts",
-        "app/modules/lesson-viewer/lib/thread.server.ts",
         "app/routes/admin.categories.tsx",
         "app/routes/admin.courses.tsx",
         "app/routes/admin.refunds.tsx",
