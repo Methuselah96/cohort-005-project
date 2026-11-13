@@ -84,6 +84,34 @@ describe("getLessonThread", () => {
     expect(getLessonThread(lessonId)).toEqual([]);
   });
 
+  it("marks a Platform Admin author", () => {
+    const admin = db
+      .insert(schema.users)
+      .values({
+        name: "Ada Admin",
+        email: "admin@example.com",
+        role: schema.UserRole.Admin,
+      })
+      .returning()
+      .get();
+    addComment(admin.id);
+    addComment(studentId);
+
+    expect(getLessonThread(lessonId).map((c) => c.author)).toMatchObject([
+      { id: admin.id, isPlatformAdmin: true },
+      { id: studentId, isPlatformAdmin: false },
+    ]);
+  });
+
+  it("drops a reply whose parent is itself a reply", () => {
+    const question = addComment(studentId);
+    const answer = addComment(instructorId, question);
+    addComment(studentId, answer);
+
+    const thread = getLessonThread(lessonId);
+    expect(thread[0].replies.map((r) => r.id)).toEqual([answer]);
+  });
+
   it("is empty for an unknown lesson", () => {
     expect(getLessonThread(lessonId + 1)).toEqual([]);
   });

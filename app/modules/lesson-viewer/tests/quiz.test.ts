@@ -164,6 +164,31 @@ describe("computeResult", () => {
     ]);
   });
 
+  it("marks an answer wrong when its question has no correct option", () => {
+    const bare = db
+      .insert(schema.quizQuestions)
+      .values({
+        quizId,
+        questionText: "No options",
+        questionType: QuestionType.MultipleChoice,
+        position: 3,
+      })
+      .returning()
+      .get();
+
+    expect(getQuizWithQuestions(quizId)?.questions[2]).toMatchObject({
+      id: bare.id,
+      options: [],
+    });
+    const result = computeResult(studentId, quizId, { [bare.id]: mc.right });
+    expect(result?.questionResults[2]).toEqual({
+      questionId: bare.id,
+      correct: false,
+      selectedOptionId: mc.right,
+      correctOptionId: null,
+    });
+  });
+
   it("scores a quiz with no questions as zero", () => {
     const empty = db
       .insert(schema.quizzes)
