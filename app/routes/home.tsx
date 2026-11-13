@@ -9,17 +9,12 @@ import {
   CardHeader,
 } from "~/components/ui/card";
 import { CourseStatus } from "~/db/schema";
-import {
-  BookOpen,
-  GraduationCap,
-  Users,
-  ArrowRight,
-  User,
-  Moon,
-  Sun,
-} from "lucide-react";
+import { BookOpen, ArrowRight, User, Moon, Sun } from "lucide-react";
 import { CourseImage } from "~/components/course-image";
 import { DevUI } from "~/components/dev-ui";
+import { LandingHero } from "~/components/landing/landing-hero";
+import { LandingFooter } from "~/components/landing/landing-footer";
+import { landingStats, secondaryHeroAction } from "~/modules/landing-page";
 import { getCurrentUserId, getDevCountry } from "~/lib/session";
 import { getCountryTierInfo, COUNTRIES } from "~/lib/ppp";
 import { eq, like, and, or, sql } from "drizzle-orm";
@@ -137,7 +132,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     50,
     0
   );
-  const featured = courses.slice(0, 3).map((course) => ({
+  const [spotlight = null, ...featured] = courses.slice(0, 4).map((course) => ({
     ...course,
     lessonCount: getLessonCountForCourse(course.id),
   }));
@@ -149,6 +144,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const countryTierInfo = getCountryTierInfo(devCountry);
 
   return {
+    spotlightCourse: spotlight,
     featuredCourses: featured,
     totalCourses: courses.length,
     totalCategories: categories.length,
@@ -164,6 +160,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function Home({ loaderData }: Route.ComponentProps) {
   const {
+    spotlightCourse,
     featuredCourses,
     totalCourses,
     totalCategories,
@@ -173,6 +170,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     countryTierInfo,
     countries,
   } = loaderData;
+  const signedIn = currentUser !== null;
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -234,53 +232,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </div>
       </header>
 
-      <section className="mx-auto max-w-6xl px-6 py-24 text-center">
-        <h1 className="text-5xl font-bold tracking-tight sm:text-6xl">
-          Learn to code,
-          <br />
-          <span className="text-muted-foreground">at your own pace</span>
-        </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-          Structured courses built by experienced instructors. Track your
-          progress, take quizzes, and build real-world skills.
-        </p>
-        <div className="mt-10 flex items-center justify-center gap-4">
-          <Button asChild size="lg">
-            <Link to="/courses">
-              Browse Courses
-              <ArrowRight className="ml-2 size-4" />
-            </Link>
-          </Button>
-        </div>
-      </section>
-
-      <section className="border-y border-border bg-muted/50 py-16">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-6 sm:grid-cols-3">
-          <div className="text-center">
-            <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-lg bg-primary/10">
-              <BookOpen className="size-6 text-primary" />
-            </div>
-            <p className="text-2xl font-bold">{totalCourses}</p>
-            <p className="text-sm text-muted-foreground">Available Courses</p>
-          </div>
-          <div className="text-center">
-            <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-lg bg-primary/10">
-              <GraduationCap className="size-6 text-primary" />
-            </div>
-            <p className="text-2xl font-bold">{totalCategories}</p>
-            <p className="text-sm text-muted-foreground">Categories</p>
-          </div>
-          <div className="text-center">
-            <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-lg bg-primary/10">
-              <Users className="size-6 text-primary" />
-            </div>
-            <p className="text-2xl font-bold">Self-paced</p>
-            <p className="text-sm text-muted-foreground">
-              Learn on your schedule
-            </p>
-          </div>
-        </div>
-      </section>
+      <LandingHero
+        stats={landingStats({
+          courseCount: totalCourses,
+          categoryCount: totalCategories,
+        })}
+        secondaryAction={secondaryHeroAction(signedIn)}
+        spotlight={spotlightCourse}
+      />
 
       {featuredCourses.length > 0 && (
         <section className="mx-auto max-w-6xl px-6 py-20">
@@ -290,7 +249,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 Featured Courses
               </h2>
               <p className="mt-2 text-muted-foreground">
-                Start learning with our most popular courses
+                More new courses to start learning with
               </p>
             </div>
             <Button asChild variant="outline">
@@ -340,11 +299,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </section>
       )}
 
-      <footer className="border-t border-border py-8">
-        <div className="mx-auto max-w-6xl px-6 text-center text-sm text-muted-foreground">
-          Cadence
-        </div>
-      </footer>
+      <LandingFooter signedIn={signedIn} />
 
       <DevUI
         users={users}
