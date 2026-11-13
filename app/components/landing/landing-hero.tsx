@@ -74,10 +74,7 @@ function HeroStats({ stats }: { stats: LandingStat[] }) {
 
 function HeroSpotlight({ course }: { course: HeroCourse }) {
   return (
-    <Link
-      to={`/courses/${course.slug}`}
-      className="group relative hidden lg:block"
-    >
+    <Link to={`/courses/${course.slug}`} className="group relative block">
       <div className="absolute -inset-3 rotate-2 rounded-2xl bg-primary/10" />
       <div className="relative overflow-hidden rounded-xl border border-border bg-card shadow-xl transition-shadow group-hover:shadow-2xl">
         <CourseImage

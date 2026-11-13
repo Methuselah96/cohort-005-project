@@ -132,7 +132,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     50,
     0
   );
-  const featured = courses.slice(0, 3).map((course) => ({
+  const [spotlight = null, ...featured] = courses.slice(0, 4).map((course) => ({
     ...course,
     lessonCount: getLessonCountForCourse(course.id),
   }));
@@ -144,6 +144,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const countryTierInfo = getCountryTierInfo(devCountry);
 
   return {
+    spotlightCourse: spotlight,
     featuredCourses: featured,
     totalCourses: courses.length,
     totalCategories: categories.length,
@@ -159,6 +160,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function Home({ loaderData }: Route.ComponentProps) {
   const {
+    spotlightCourse,
     featuredCourses,
     totalCourses,
     totalCategories,
@@ -236,7 +238,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           categoryCount: totalCategories,
         })}
         secondaryAction={secondaryHeroAction(signedIn)}
-        spotlight={featuredCourses[0] ?? null}
+        spotlight={spotlightCourse}
       />
 
       {featuredCourses.length > 0 && (
@@ -247,7 +249,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 Featured Courses
               </h2>
               <p className="mt-2 text-muted-foreground">
-                Start learning with our most popular courses
+                More new courses to start learning with
               </p>
             </div>
             <Button asChild variant="outline">
